@@ -3,22 +3,25 @@
     const baseUrl = 'https://marangatu.set.gov.py/eset/';
 
     function tryInject() {
+        const STORAGE_KEY = 'marangatuSidebarItems';
+        const saved = localStorage.getItem(STORAGE_KEY);
+
+        if (saved) {
+            console.log("✅ Using cached menu from localStorage");
+            injectSidebar(JSON.parse(saved));
+            return;
+        }
+
         const scope = window.angular?.element(document.querySelector('.menu-sistema'))?.scope();
 
         if (scope?.vm?.datos?.completo?.length) {
-            console.log("✅ Menu found, injecting sidebar...");
+            console.log("✅ Menu found via Angular, injecting and caching...");
             const items = scope.vm.datos.completo.filter(item => item.url);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
             injectSidebar(items);
         } else {
-            const saved = localStorage.getItem(STORAGE_KEY);
-            if (saved) {
-                console.log("⚠️ Menu not found, using cached items...");
-                injectSidebar(JSON.parse(saved));
-            } else {
-                console.log("⏳ Waiting for menu data...");
-                return setTimeout(tryInject, 500);
-            }
+            console.log("⏳ Menu not found, retrying...");
+            setTimeout(tryInject, 500);
         }
     }
 
