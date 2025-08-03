@@ -45,6 +45,7 @@
 
     function injectSidebar(items) {
         const baseUrl = 'https://marangatu.set.gov.py/eset/';
+        const initialUrl = location.href;
 
         if (document.querySelector('#custom-sidebar')) return;
 
@@ -79,6 +80,7 @@
         z-index:9998;
         background:white;
     `;
+        iframe.src = initialUrl;
         document.body.appendChild(iframe);
 
         // Add menu items
