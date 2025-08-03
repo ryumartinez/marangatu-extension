@@ -101,6 +101,27 @@
             .join('')}
         </ul>
     `;
+        // Create loading overlay
+        const loadingOverlay = document.createElement('div');
+        loadingOverlay.id = 'iframe-loading';
+        loadingOverlay.style = `
+          position: fixed;
+          top: 0;
+          left: 260px;
+          width: calc(100vw - 260px);
+          height: 100vh;
+          background: white;
+          z-index: 9999;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-family: sans-serif;
+          font-size: 18px;
+          color: #333;
+        `;
+        loadingOverlay.textContent = 'Cargando...';
+        loadingOverlay.style.display = 'none';
+        document.body.appendChild(loadingOverlay);
 
         // Handle clicks to update iframe source
         sidebar.addEventListener('click', function (e) {
@@ -108,11 +129,17 @@
             if (link) {
                 e.preventDefault();
                 const targetUrl = link.dataset.url;
+                loadingOverlay.style.display = 'flex';
                 iframe.src = targetUrl;
             }
         });
 
         document.body.appendChild(sidebar);
+        iframe.addEventListener('load', () => {
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+            }, 100); // delay in ms, e.g., 300ms
+        });
     }
 
     tryInject();
