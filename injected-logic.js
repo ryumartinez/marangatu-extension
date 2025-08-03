@@ -92,7 +92,7 @@
             .map(
                 item => `
                 <li style="margin-bottom:8px;">
-                    <a href="#" data-url="${baseUrl + item.url}" style="color:#9cf; text-decoration:none;">
+                    <a href="${baseUrl + item.url}" data-url="${baseUrl + item.url}" style="color:#9cf; text-decoration:none;">
                         ${item.nombre}
                     </a>
                 </li>
@@ -109,19 +109,6 @@
                 e.preventDefault();
                 const targetUrl = link.dataset.url;
                 iframe.src = targetUrl;
-            }
-        });
-
-        // Open new tabs with the mouse wheel
-        sidebar.addEventListener('mousedown', function (e) {
-            const link = e.target.closest('a[data-url]');
-            if (!link) return;
-
-            const url = link.dataset.url;
-
-            if (e.button === 1) {
-                // Middle click: open in new tab
-                window.open(url, '_blank');
             }
         });
 
