@@ -5,17 +5,19 @@
   "description": "Injects a custom sidebar for improved navigation",
   "permissions": ["scripting", "activeTab"],
   "host_permissions": ["https://marangatu.set.gov.py/*"],
-  "action": {
-    "default_title": "Inject Sidebar",
-    "default_icon": {
-      "16": "icon-16.png",
-      "48": "icon-48.png",
-      "128": "icon-128.png"
+  "content_scripts": [
+    {
+      "matches": ["https://marangatu.set.gov.py/*"],
+      "js": ["inject.js"],
+      "run_at": "document_idle"
     }
-  },
-  "background": {
-    "service_worker": "background.js"
-  },
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["injected-logic.js"],
+      "matches": ["https://marangatu.set.gov.py/*"]
+    }
+  ],
   "icons": {
     "16": "icon-16.png",
     "48": "icon-48.png",

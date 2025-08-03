@@ -1,54 +1,9 @@
-(function () {
-    const baseUrl = 'https://marangatu.set.gov.py/eset/';
-
-    const scope = angular.element(document.querySelector('.menu-sistema')).scope();
-    if (!scope?.vm?.datos?.completo) {
-        console.error("❌ Could not find menu items");
-        return;
-    }
-
-    const items = scope.vm.datos.completo.filter(item => item.url);
-
-    if (document.querySelector('#custom-sidebar')) return;
-
-    const sidebar = document.createElement('div');
-    sidebar.id = 'custom-sidebar';
-    sidebar.style = `
-    position:fixed;
-    top:0;
-    left:0;
-    width:260px;
-    height:100vh;
-    background:#1e1e1e;
-    color:#fff;
-    overflow:auto;
-    z-index:9999;
-    padding:15px;
-    font-family:sans-serif;
-    box-shadow:2px 0 6px rgba(0,0,0,0.4);
-  `;
-
-    sidebar.innerHTML = `
-    <h3 style="color:white; margin-top:0; font-size:18px;">Menú Accesible</h3>
-    <ul style="list-style:none; padding-left:0; margin:0;">
-      ${items.map(item => `
-        <li style="margin-bottom:8px;">
-          <a href="#" data-url="${baseUrl + item.url}" style="color:#9cf; text-decoration:none;">
-            ${item.nombre}
-          </a>
-        </li>
-      `).join('')}
-    </ul>
-  `;
-
-    sidebar.addEventListener('click', function (e) {
-        const link = e.target.closest('a[data-url]');
-        if (link) {
-            e.preventDefault();
-            const realUrl = link.dataset.url;
-            window.location.href = realUrl; // ← ← ← SAME TAB NAVIGATION
-        }
-    });
-
-    document.body.appendChild(sidebar);
+// inject.js — runs in extension content_script context
+(function injectRealScript() {
+    const script = document.createElement('script');
+    script.src = chrome.runtime.getURL('injected-logic.js');
+    script.onload = function () {
+        this.remove(); // cleanup
+    };
+    (document.head || document.documentElement).appendChild(script);
 })();
