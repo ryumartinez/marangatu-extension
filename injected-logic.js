@@ -1,3 +1,20 @@
+/**
+ * @typedef {Object} MenuItem
+ * @property {string} aplicacion
+ * @property {string} descripcion
+ * @property {'S'|'N'} modifica
+ * @property {string} nombre
+ * @property {string|null} padre
+ * @property {string|null} rutaArbol
+ * @property {string} servicio
+ * @property {string|null} tipo
+ * @property {string|null} url
+ * @property {'S'|'N'} visible
+ * @property {string|null} estado
+ * @property {number} nivel
+ */
+
+
 (function () {
     const STORAGE_KEY = 'marangatuSidebarItems';
     const baseUrl = 'https://marangatu.set.gov.py/eset/';
@@ -16,6 +33,7 @@
 
         if (scope?.vm?.datos?.completo?.length) {
             console.log("✅ Menu found via Angular, injecting and caching...");
+            /** @type {MenuItem[]} */
             const items = scope.vm.datos.completo.filter(item => item.url);
             localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
             injectSidebar(items);
