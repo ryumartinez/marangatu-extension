@@ -83,42 +83,51 @@
         iframe.src = initialUrl;
         document.body.appendChild(iframe);
 
-        // Add menu items
+        // Build menu HTML
+        const homeLink = `
+        <li style="margin-bottom:8px;">
+            <a href="${baseUrl}" data-url="${baseUrl}" style="color:#9cf; text-decoration:none;">
+                🏠 Inicio
+            </a>
+        </li>
+    `;
+
+        const menuLinks = items
+            .filter(item => item.url)
+            .map(item => `
+            <li style="margin-bottom:8px;">
+                <a href="${baseUrl + item.url}" data-url="${baseUrl + item.url}" style="color:#9cf; text-decoration:none;">
+                    ${item.nombre}
+                </a>
+            </li>
+        `).join('');
+
         sidebar.innerHTML = `
         <h3 style="color:white; margin-top:0; font-size:18px;">Menú Accesible</h3>
         <ul style="list-style:none; padding-left:0; margin:0;">
-            ${items
-            .filter(item => item.url)
-            .map(
-                item => `
-                <li style="margin-bottom:8px;">
-                    <a href="${baseUrl + item.url}" data-url="${baseUrl + item.url}" style="color:#9cf; text-decoration:none;">
-                        ${item.nombre}
-                    </a>
-                </li>
-                `
-            )
-            .join('')}
+            ${homeLink}
+            ${menuLinks}
         </ul>
     `;
+
         // Create loading overlay
         const loadingOverlay = document.createElement('div');
         loadingOverlay.id = 'iframe-loading';
         loadingOverlay.style = `
-          position: fixed;
-          top: 0;
-          left: 260px;
-          width: calc(100vw - 260px);
-          height: 100vh;
-          background: white;
-          z-index: 9999;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-family: sans-serif;
-          font-size: 18px;
-          color: #333;
-        `;
+        position: fixed;
+        top: 0;
+        left: 260px;
+        width: calc(100vw - 260px);
+        height: 100vh;
+        background: white;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: sans-serif;
+        font-size: 18px;
+        color: #333;
+    `;
         loadingOverlay.textContent = 'Cargando...';
         loadingOverlay.style.display = 'none';
         document.body.appendChild(loadingOverlay);
@@ -134,11 +143,14 @@
             }
         });
 
+        // Append sidebar to document
         document.body.appendChild(sidebar);
+
+        // Hide loader after iframe loads
         iframe.addEventListener('load', () => {
             setTimeout(() => {
                 loadingOverlay.style.display = 'none';
-            }, 100); // delay in ms, e.g., 300ms
+            }, 100);
         });
     }
 
