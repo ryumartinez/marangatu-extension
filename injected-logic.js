@@ -14,13 +14,89 @@
  * @property {number} nivel
  */
 
-
 (function () {
     const STORAGE_KEY = 'marangatuSidebarItems';
     const baseUrl = 'https://marangatu.set.gov.py/eset/';
 
+    // ----- 1. Inject styles -----
+    function injectCustomStyles() {
+        if (document.getElementById('custom-sidebar-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'custom-sidebar-styles';
+        style.textContent = `
+            #custom-sidebar {
+                position:fixed;
+                top:0;
+                left:0;
+                width:260px;
+                height:100vh;
+                background:#1e1e1e;
+                color:#fff;
+                overflow:auto;
+                z-index:9999;
+                padding:15px;
+                font-family:sans-serif;
+                box-shadow:2px 0 6px rgba(0,0,0,0.4);
+            }
+            #custom-sidebar h3 {
+                color:white;
+                margin-top:0;
+                font-size:18px;
+            }
+            #custom-sidebar ul {
+                list-style:none;
+                padding-left:0;
+                margin:0;
+            }
+            #custom-sidebar li {
+                margin-bottom:8px;
+            }
+            #custom-sidebar a {
+                color:#9cf;
+                text-decoration:none;
+            }
+            #custom-iframe {
+                position:fixed;
+                top:0;
+                left:260px;
+                width:calc(100vw - 260px);
+                height:100vh;
+                border:none;
+                z-index:9998;
+                background:white;
+            }
+            #iframe-loading {
+                position: fixed;
+                top: 0;
+                left: 260px;
+                width: calc(100vw - 260px);
+                height: 100vh;
+                background: white;
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-family: sans-serif;
+                font-size: 18px;
+                color: #333;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // ----- 2. Helper to create a menu link -----
+    function menuItemHTML(text, url) {
+        return `
+            <li>
+                <a href="${url}" data-url="${url}">
+                    ${text}
+                </a>
+            </li>
+        `;
+    }
+
+    // ----- 3. Wrapper for fetching menu -----
     function tryInject() {
-        const STORAGE_KEY = 'marangatuSidebarItems';
         const saved = localStorage.getItem(STORAGE_KEY);
 
         if (saved) {
@@ -43,107 +119,52 @@
         }
     }
 
+    // ----- 4. Main sidebar injection -----
     function injectSidebar(items) {
-        const baseUrl = 'https://marangatu.set.gov.py/eset/';
-        const initialUrl = location.href;
+        injectCustomStyles();
 
         if (document.querySelector('#custom-sidebar')) return;
+        const initialUrl = location.href;
 
-        // Create sidebar
+        // Sidebar
         const sidebar = document.createElement('div');
         sidebar.id = 'custom-sidebar';
-        sidebar.style = `
-        position:fixed;
-        top:0;
-        left:0;
-        width:260px;
-        height:100vh;
-        background:#1e1e1e;
-        color:#fff;
-        overflow:auto;
-        z-index:9999;
-        padding:15px;
-        font-family:sans-serif;
-        box-shadow:2px 0 6px rgba(0,0,0,0.4);
-    `;
 
-        // Create iframe container
+        // Iframe
         const iframe = document.createElement('iframe');
         iframe.id = 'custom-iframe';
-        iframe.style = `
-        position:fixed;
-        top:0;
-        left:260px;
-        width:calc(100vw - 260px);
-        height:100vh;
-        border:none;
-        z-index:9998;
-        background:white;
-    `;
         iframe.src = initialUrl;
         document.body.appendChild(iframe);
 
-        // Build menu HTML
-        const homeLink = `
-        <li style="margin-bottom:8px;">
-            <a href="${baseUrl}" data-url="${baseUrl}" style="color:#9cf; text-decoration:none;">
-                🏠 Inicio
-            </a>
-        </li>
-    `;
+        // Menu HTML
+        let menuHtml = '<h3>Menú Accesible</h3><ul>';
+        menuHtml += menuItemHTML('🏠 Inicio', baseUrl);
+        for (const item of items) {
+            if (item.url) {
+                menuHtml += menuItemHTML(item.nombre, baseUrl + item.url);
+            }
+        }
+        menuHtml += '</ul>';
+        sidebar.innerHTML = menuHtml;
 
-        const menuLinks = items
-            .filter(item => item.url)
-            .map(item => `
-            <li style="margin-bottom:8px;">
-                <a href="${baseUrl + item.url}" data-url="${baseUrl + item.url}" style="color:#9cf; text-decoration:none;">
-                    ${item.nombre}
-                </a>
-            </li>
-        `).join('');
-
-        sidebar.innerHTML = `
-        <h3 style="color:white; margin-top:0; font-size:18px;">Menú Accesible</h3>
-        <ul style="list-style:none; padding-left:0; margin:0;">
-            ${homeLink}
-            ${menuLinks}
-        </ul>
-    `;
-
-        // Create loading overlay
+        // Loading overlay
         const loadingOverlay = document.createElement('div');
         loadingOverlay.id = 'iframe-loading';
-        loadingOverlay.style = `
-        position: fixed;
-        top: 0;
-        left: 260px;
-        width: calc(100vw - 260px);
-        height: 100vh;
-        background: white;
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-family: sans-serif;
-        font-size: 18px;
-        color: #333;
-    `;
         loadingOverlay.textContent = 'Cargando...';
         loadingOverlay.style.display = 'none';
         document.body.appendChild(loadingOverlay);
 
-        // Handle clicks to update iframe source
+        // Handle menu clicks
         sidebar.addEventListener('click', function (e) {
             const link = e.target.closest('a[data-url]');
             if (link) {
                 e.preventDefault();
-                const targetUrl = link.dataset.url;
                 loadingOverlay.style.display = 'flex';
-                iframe.src = targetUrl;
+                iframe.src = link.dataset.url;
             }
         });
 
-        // Append sidebar to document
+        // Add sidebar
         document.body.appendChild(sidebar);
 
         // Hide loader after iframe loads
@@ -154,5 +175,6 @@
         });
     }
 
+    // ----- 5. Start -----
     tryInject();
 })();
