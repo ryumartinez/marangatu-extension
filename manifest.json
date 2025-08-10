@@ -17,7 +17,8 @@
       "resources": [
         "styles/sidebar.css",
         "injected-logic.js",
-        "sidebar.js"
+        "sidebar.js",
+        "sidebar-item.js"
       ],
       "matches": ["https://marangatu.set.gov.py/*"]
     }
