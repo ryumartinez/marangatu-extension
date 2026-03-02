@@ -20,7 +20,8 @@ export function SidebarItem({ item, isFavorite, baseUrl, currentUrl, onToggle, o
         ${item.nombre}
       </a>
       <button
-        onClick=${() => onToggle(fullUrl)}
+        /* Send the item.nombre to be saved, NOT the changing URL */
+        onClick=${() => onToggle(item.nombre)}
         style="background:none;border:none;color:#ff0;cursor:pointer;font-size:16px;padding:0 0 0 8px;"
         title=${isFavorite ? 'Quitar de favoritos' : 'Añadir a favoritos'}
       >
