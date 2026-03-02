@@ -5,7 +5,6 @@ const FAVORITES_KEY = 'marangatuSidebarFavorites';
 const baseUrl = 'https://marangatu.set.gov.py/eset/';
 
 // --- Helpers ---
-// Gets favorites from the site's localStorage
 function getFavorites() {
     try {
         return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
@@ -14,7 +13,6 @@ function getFavorites() {
     }
 }
 
-// Saves favorites to the site's localStorage
 function saveFavorites(favs) {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
 }
@@ -23,13 +21,16 @@ export function Sidebar({ items }) {
     const [favorites, setFavorites] = useState(getFavorites());
     const [iframeUrl, setIframeUrl] = useState(location.href);
     const [loading, setLoading] = useState(false);
+    
+    // 1. Add state for the search term
+    const [searchTerm, setSearchTerm] = useState('');
 
     function toggleFavorite(url) {
         const newFavs = favorites.includes(url)
             ? favorites.filter(f => f !== url)
             : [...favorites, url];
         setFavorites(newFavs);
-        saveFavorites(newFavs); // Persist state immediately
+        saveFavorites(newFavs);
     }
 
     function navigateTo(url) {
@@ -37,41 +38,71 @@ export function Sidebar({ items }) {
         setIframeUrl(url);
     }
 
-    const favoriteItems = items.filter(it => favorites.includes(baseUrl + it.url));
-    const otherItems = items.filter(it => !favorites.includes(baseUrl + it.url));
+    // 2. Filter the items based on the search term first
+    const filteredItems = items.filter(it => 
+        it.nombre.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    // 3. Then split the filtered items into favorites and others
+    const favoriteItems = filteredItems.filter(it => favorites.includes(baseUrl + it.url));
+    const otherItems = filteredItems.filter(it => !favorites.includes(baseUrl + it.url));
 
     return html`
       <div id="custom-sidebar" style="
       position:fixed;top:0;left:0;width:260px;height:100vh;
       background:#1e1e1e;color:#fff;overflow:auto;z-index:9999;
       padding:15px;font-family:sans-serif;box-shadow:2px 0 6px rgba(0,0,0,0.4);
+      box-sizing: border-box;
     ">
-        <h3>Favoritos</h3>
-        <ul style="list-style:none;padding:0;margin:0 0 20px 0;">
-          ${favoriteItems.map(item =>
-            html`<${SidebarItem}
-              item=${item}
-              baseUrl=${baseUrl}
-              isFavorite=${true}
-              currentUrl=${iframeUrl} 
-              onToggle=${toggleFavorite}
-              onNavigate=${navigateTo}
-            />`
-          )}
-        </ul>
+        <input 
+          type="text" 
+          placeholder="Buscar menú..." 
+          value=${searchTerm}
+          onInput=${e => setSearchTerm(e.target.value)}
+          style="
+            width: 100%; 
+            padding: 10px; 
+            margin-bottom: 20px; 
+            border-radius: 4px; 
+            border: 1px solid #444; 
+            background: #2a2a2a; 
+            color: #fff; 
+            box-sizing: border-box;
+            font-size: 14px;
+          "
+        />
+
+        ${favoriteItems.length > 0 && html`
+          <h3>Favoritos</h3>
+          <ul style="list-style:none;padding:0;margin:0 0 20px 0;">
+            ${favoriteItems.map(item =>
+              html`<${SidebarItem}
+                item=${item}
+                baseUrl=${baseUrl}
+                isFavorite=${true}
+                currentUrl=${iframeUrl} 
+                onToggle=${toggleFavorite}
+                onNavigate=${navigateTo}
+              />`
+            )}
+          </ul>
+        `}
 
         <h3>Menú Accesible</h3>
         <ul style="list-style:none;padding:0;margin:0;">
-          ${otherItems.map(item =>
-            html`<${SidebarItem}
-              item=${item}
-              baseUrl=${baseUrl}
-              isFavorite=${false}
-              currentUrl=${iframeUrl} 
-              onToggle=${toggleFavorite}
-              onNavigate=${navigateTo}
-            />`
-          )}
+          ${otherItems.length > 0 
+            ? otherItems.map(item =>
+                html`<${SidebarItem}
+                  item=${item}
+                  baseUrl=${baseUrl}
+                  isFavorite=${false}
+                  currentUrl=${iframeUrl} 
+                  onToggle=${toggleFavorite}
+                  onNavigate=${navigateTo}
+                />`
+              )
+            : html`<li style="color:#888;font-size:13px;">No se encontraron resultados</li>`
+          }
         </ul>
       </div>
 
