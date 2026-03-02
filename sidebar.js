@@ -1,36 +1,44 @@
-import { html, useState } from 'https://esm.sh/htm/preact/standalone';
+// sidebar.js
+import { html, useState, useEffect } from 'https://esm.sh/htm/preact/standalone';
 import { SidebarItem } from './sidebar-item.js';
 
-const FAVORITES_KEY = 'marangatuSidebarFavorites';
 const baseUrl = 'https://marangatu.set.gov.py/eset/';
 
-// --- Helpers ---
-function getFavorites() {
-    try {
-        return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
-    } catch {
-        return [];
-    }
-}
-
-function saveFavorites(favs) {
-    localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
-}
-
 export function Sidebar({ items }) {
-    const [favorites, setFavorites] = useState(getFavorites());
+    // Start with empty array, will populate via Chrome Storage bridge
+    const [favorites, setFavorites] = useState([]);
     const [iframeUrl, setIframeUrl] = useState(location.href);
     const [loading, setLoading] = useState(false);
-    
-    // 1. Add state for the search term
     const [searchTerm, setSearchTerm] = useState('');
+
+    // --- NEW: Load favorites when sidebar mounts ---
+    useEffect(() => {
+        const handleMessage = (event) => {
+            if (event.source !== window) return;
+            if (event.data.type === 'FAVORITES_LOADED') {
+                setFavorites(event.data.favorites);
+            }
+        };
+
+        // Listen for the response from inject.js
+        window.addEventListener('message', handleMessage);
+        
+        // Ask inject.js to load the favorites
+        window.postMessage({ type: 'LOAD_FAVORITES' }, '*');
+
+        // Cleanup listener on unmount
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
 
     function toggleFavorite(url) {
         const newFavs = favorites.includes(url)
             ? favorites.filter(f => f !== url)
             : [...favorites, url];
-        setFavorites(newFavs);
-        saveFavorites(newFavs);
+        
+        setFavorites(newFavs); // Update UI instantly
+        
+        // --- NEW: Send to inject.js to save in Chrome Storage ---
+        window.postMessage({ type: 'SAVE_FAVORITES', favorites: newFavs }, '*');
     }
 
     function navigateTo(url) {
@@ -38,12 +46,10 @@ export function Sidebar({ items }) {
         setIframeUrl(url);
     }
 
-    // 2. Filter the items based on the search term first
     const filteredItems = items.filter(it => 
         it.nombre.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    // 3. Then split the filtered items into favorites and others
     const favoriteItems = filteredItems.filter(it => favorites.includes(baseUrl + it.url));
     const otherItems = filteredItems.filter(it => !favorites.includes(baseUrl + it.url));
 
