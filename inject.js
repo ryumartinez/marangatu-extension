@@ -1,4 +1,3 @@
-// inject.js
 (function injectSidebarAssets() {
     // 1. Inject sidebar.css from styles/ folder
     if (!document.getElementById('custom-sidebar-styles')) {
@@ -14,28 +13,31 @@
     script.type = 'module';
     script.src = chrome.runtime.getURL('injected-logic.js');
     script.onload = function () {
-        this.remove();
+        this.remove(); 
     };
     (document.head || document.documentElement).appendChild(script);
 })();
 
-// --- NEW: Chrome Storage Bridge ---
-// Listens for messages from your injected Preact app
+// --- Chrome Storage Bridge ---
 window.addEventListener('message', (event) => {
     // Only accept messages from our own window
     if (event.source !== window) return;
 
     // Save to Chrome Storage
     if (event.data.type === 'SAVE_FAVORITES') {
+        console.log('[Content Script] Saving favorites to Chrome Storage:', event.data.favorites);
         chrome.storage.local.set({ marangatuSidebarFavorites: event.data.favorites });
     }
 
     // Load from Chrome Storage and send back
     if (event.data.type === 'LOAD_FAVORITES') {
+        console.log('[Content Script] Sidebar requested favorites. Fetching...');
         chrome.storage.local.get(['marangatuSidebarFavorites'], (result) => {
+            const favs = result.marangatuSidebarFavorites || [];
+            console.log('[Content Script] Sending favorites back to Sidebar:', favs);
             window.postMessage({
                 type: 'FAVORITES_LOADED',
-                favorites: result.marangatuSidebarFavorites || []
+                favorites: favs
             }, '*');
         });
     }
