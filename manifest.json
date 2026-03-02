@@ -3,7 +3,7 @@
   "name": "Marangatu Sidebar Enhancer",
   "version": "1.0",
   "description": "Injects a custom sidebar for improved navigation",
-  "permissions": ["scripting", "activeTab"],
+  "permissions": ["scripting", "activeTab", "storage"],
   "host_permissions": ["https://marangatu.set.gov.py/*"],
   "content_scripts": [
     {
