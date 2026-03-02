@@ -1,4 +1,3 @@
-// sidebar.js
 import { html, useState } from 'https://esm.sh/htm/preact/standalone';
 import { SidebarItem } from './sidebar-item.js';
 
@@ -6,6 +5,7 @@ const FAVORITES_KEY = 'marangatuSidebarFavorites';
 const baseUrl = 'https://marangatu.set.gov.py/eset/';
 
 // --- Helpers ---
+// Gets favorites from the site's localStorage
 function getFavorites() {
     try {
         return JSON.parse(localStorage.getItem(FAVORITES_KEY)) || [];
@@ -13,6 +13,8 @@ function getFavorites() {
         return [];
     }
 }
+
+// Saves favorites to the site's localStorage
 function saveFavorites(favs) {
     localStorage.setItem(FAVORITES_KEY, JSON.stringify(favs));
 }
@@ -27,7 +29,7 @@ export function Sidebar({ items }) {
             ? favorites.filter(f => f !== url)
             : [...favorites, url];
         setFavorites(newFavs);
-        saveFavorites(newFavs);
+        saveFavorites(newFavs); // Persist state immediately
     }
 
     function navigateTo(url) {
@@ -51,6 +53,7 @@ export function Sidebar({ items }) {
               item=${item}
               baseUrl=${baseUrl}
               isFavorite=${true}
+              currentUrl=${iframeUrl} 
               onToggle=${toggleFavorite}
               onNavigate=${navigateTo}
             />`
@@ -64,6 +67,7 @@ export function Sidebar({ items }) {
               item=${item}
               baseUrl=${baseUrl}
               isFavorite=${false}
+              currentUrl=${iframeUrl} 
               onToggle=${toggleFavorite}
               onNavigate=${navigateTo}
             />`
