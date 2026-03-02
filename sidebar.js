@@ -1,43 +1,45 @@
-// sidebar.js
 import { html, useState, useEffect } from 'https://esm.sh/htm/preact/standalone';
 import { SidebarItem } from './sidebar-item.js';
 
 const baseUrl = 'https://marangatu.set.gov.py/eset/';
 
 export function Sidebar({ items }) {
-    // Start with empty array, will populate via Chrome Storage bridge
     const [favorites, setFavorites] = useState([]);
+    const [isLoaded, setIsLoaded] = useState(false); // Safety lock
     const [iframeUrl, setIframeUrl] = useState(location.href);
     const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
 
-    // --- NEW: Load favorites when sidebar mounts ---
     useEffect(() => {
         const handleMessage = (event) => {
             if (event.source !== window) return;
             if (event.data.type === 'FAVORITES_LOADED') {
+                console.log('[Sidebar] Received favorites from Content Script:', event.data.favorites);
                 setFavorites(event.data.favorites);
+                setIsLoaded(true); // Unlock saving
             }
         };
 
-        // Listen for the response from inject.js
         window.addEventListener('message', handleMessage);
         
-        // Ask inject.js to load the favorites
+        console.log('[Sidebar] Asking Content Script to load favorites...');
         window.postMessage({ type: 'LOAD_FAVORITES' }, '*');
 
-        // Cleanup listener on unmount
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
     function toggleFavorite(url) {
+        // Prevent accidental wipe if storage hasn't loaded yet
+        if (!isLoaded) {
+            console.warn('[Sidebar] Ignored click: Favorites have not loaded yet!');
+            return;
+        }
+
         const newFavs = favorites.includes(url)
             ? favorites.filter(f => f !== url)
             : [...favorites, url];
         
-        setFavorites(newFavs); // Update UI instantly
-        
-        // --- NEW: Send to inject.js to save in Chrome Storage ---
+        setFavorites(newFavs);
         window.postMessage({ type: 'SAVE_FAVORITES', favorites: newFavs }, '*');
     }
 
