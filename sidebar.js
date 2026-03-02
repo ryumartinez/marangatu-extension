@@ -28,16 +28,17 @@ export function Sidebar({ items }) {
         return () => window.removeEventListener('message', handleMessage);
     }, []);
 
-    function toggleFavorite(url) {
+    function toggleFavorite(nombre) {
         // Prevent accidental wipe if storage hasn't loaded yet
         if (!isLoaded) {
             console.warn('[Sidebar] Ignored click: Favorites have not loaded yet!');
             return;
         }
 
-        const newFavs = favorites.includes(url)
-            ? favorites.filter(f => f !== url)
-            : [...favorites, url];
+        // Toggle using the unique name instead of the dynamic URL
+        const newFavs = favorites.includes(nombre)
+            ? favorites.filter(f => f !== nombre)
+            : [...favorites, nombre];
         
         setFavorites(newFavs);
         window.postMessage({ type: 'SAVE_FAVORITES', favorites: newFavs }, '*');
@@ -48,12 +49,14 @@ export function Sidebar({ items }) {
         setIframeUrl(url);
     }
 
+    // 1. Filter by search term
     const filteredItems = items.filter(it => 
         it.nombre.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const favoriteItems = filteredItems.filter(it => favorites.includes(baseUrl + it.url));
-    const otherItems = filteredItems.filter(it => !favorites.includes(baseUrl + it.url));
+    // 2. Separate into favorites and others based on the item's name
+    const favoriteItems = filteredItems.filter(it => favorites.includes(it.nombre));
+    const otherItems = filteredItems.filter(it => !favorites.includes(it.nombre));
 
     return html`
       <div id="custom-sidebar" style="
